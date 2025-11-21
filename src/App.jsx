@@ -844,7 +844,7 @@ const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2
                 reserved.
               </p>
               <p className="mt-1">
-                AI-powered resume analysis and optimization : DevOps
+                AI-powered resume analysis and optimization
               </p>
             </div>
           </div>
