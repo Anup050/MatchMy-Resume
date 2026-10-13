@@ -509,11 +509,26 @@ const App = () => {
       try {
         const response = await fetch(url, options);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          let errorDetail = "";
+          try {
+            const errData = await response.json();
+            errorDetail = errData?.error?.message || "";
+          } catch {
+            // Ignore json parse error if response body isn't JSON
+          }
+          const errorMsg = errorDetail
+            ? `HTTP ${response.status}: ${errorDetail}`
+            : `HTTP error! status: ${response.status}`;
+          const err = new Error(errorMsg);
+          err.status = response.status;
+          throw err;
         }
         return response.json();
       } catch (error) {
-        if (i < retries - 1) {
+        // Only retry for rate limits (429), server errors (5xx), or network failures
+        const isRetryable =
+          !error.status || error.status === 429 || error.status >= 500;
+        if (isRetryable && i < retries - 1) {
           const delay = Math.pow(2, i) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
@@ -578,7 +593,8 @@ ${jobDescription.substring(0, 5000)}`;
         );
       }
 
-const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const model = import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
 
       const result = await fetchWithRetry(apiUrl, {
